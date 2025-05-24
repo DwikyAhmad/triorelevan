@@ -9,20 +9,42 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 
-interface SearchResult {
+interface Document {
+  rank: number;
   id: string;
+  score: number;
   title: string;
   url: string;
   snippet: string;
-  score: number;
   timestamp?: string;
+  highlights: {
+    main_text: string;
+    title: string;
+  };
+}
+
+interface SearchResult {
+  total_found: number;
+  returned_count: number;
+  k_requested: number;
+  documents: Document[];
+}
+
+interface Query {
+  original: string;
+  expanded_terms: string[];
+  final_search_query: string;
+}
+
+interface RagAnswer {
+  answer: string;
+  confidence: string;
 }
 
 interface SearchResponse {
-  results: SearchResult[];
-  summary: string;
-  totalResults: number;
-  queryTime: number;
+  query: Query;
+  search_results: SearchResult;
+  rag_answer: RagAnswer;
 }
 
 export default function SearchInterface() {
@@ -33,15 +55,13 @@ export default function SearchInterface() {
 
   // Function to call the search API
   const performSearch = async (searchQuery: string, k: number = 10): Promise<SearchResponse> => {
-    const response = await fetch('/api/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: searchQuery,
-        k: k
-      }),
+    const searchParams = new URLSearchParams({
+      q: searchQuery,
+      k: k.toString()
+    });
+    
+    const response = await fetch(`/api/search?${searchParams.toString()}`, {
+      method: 'GET',
     });
 
     if (!response.ok) {
@@ -68,8 +88,106 @@ export default function SearchInterface() {
     }
   };
 
-  const formatScore = (score: number) => {
-    return Math.round(score * 100);
+  // Helper function to safely render HTML content
+  const renderHighlightedText = (text: string) => {
+    return { __html: text };
+  };
+
+  // Improved function to format text with bullet points and numbered lists
+  const formatTextWithLists = (text: string) => {
+    if (!text) return '';
+
+    // Split text into lines for better processing
+    const lines = text.split('\n');
+    const result: string[] = [];
+    let inList = false;
+    let currentParagraph = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Check if line starts with a number followed by a period
+      const numberedListMatch = line.match(/^(\d+)\.\s+(.+)/);
+      
+      // Check if line starts with bullet points
+      const bulletListMatch = line.match(/^[•\-\*]\s+(.+)/);
+      
+      if (numberedListMatch) {
+        // If we were building a paragraph, close it
+        if (currentParagraph) {
+          result.push(`<p class="mb-4">${currentParagraph.trim()}</p>`);
+          currentParagraph = '';
+        }
+        
+        // Start a list if not already in one
+        if (!inList) {
+          result.push('<ul class="list-decimal list-inside space-y-3 my-4 pl-4">');
+          inList = true;
+        }
+        
+        // Add list item (without the number since <ol> handles it)
+        result.push(`<li class="text-sm leading-relaxed">${numberedListMatch[2]}</li>`);
+        
+      } else if (bulletListMatch) {
+        // If we were building a paragraph, close it
+        if (currentParagraph) {
+          result.push(`<p class="mb-4">${currentParagraph.trim()}</p>`);
+          currentParagraph = '';
+        }
+        
+        // Close numbered list if we were in one, start unordered list
+        if (inList) {
+          result.push('</ul>');
+        }
+        if (!inList || result[result.length - 1] === '</ol>') {
+          result.push('<ul class="list-disc list-inside space-y-3 my-4 pl-4">');
+        }
+        inList = true;
+        
+        result.push(`<li class="text-sm leading-relaxed">${bulletListMatch[1]}</li>`);
+        
+      } else if (line === '') {
+        // Empty line - if we're in a list, close it
+        if (inList) {
+          const lastTag = result[result.length - 1];
+          if (!lastTag.includes('</ul>') && !lastTag.includes('</ol>')) {
+            result.push('</ul>'); // Close the most recent list
+          }
+          inList = false;
+        }
+        
+        // If we have a paragraph, close it
+        if (currentParagraph) {
+          result.push(`<p class="mb-4">${currentParagraph.trim()}</p>`);
+          currentParagraph = '';
+        }
+        
+      } else {
+        // Regular text line
+        if (inList) {
+          // Close the list
+          result.push('</ul>');
+          inList = false;
+        }
+        
+        // Add to current paragraph
+        if (currentParagraph) {
+          currentParagraph += ' ' + line;
+        } else {
+          currentParagraph = line;
+        }
+      }
+    }
+    
+    // Handle any remaining content
+    if (inList) {
+      result.push('</ul>');
+    }
+    if (currentParagraph) {
+      result.push(`<p class="mb-4">${currentParagraph.trim()}</p>`);
+    }
+
+    return result.join('');
   };
 
   return (
@@ -80,7 +198,7 @@ export default function SearchInterface() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-primary">TrioRelevan</h1>
             <div className="text-sm text-muted-foreground">
-              Advanced Information Retrieval System
+              Your Medical Research Assistant
             </div>
           </div>
         </div>
@@ -136,21 +254,39 @@ export default function SearchInterface() {
           <div className="space-y-6">
             {/* Search Info */}
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>About {results.totalResults} results</span>
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>({results.queryTime} seconds)</span>
-              </div>
+              <span>About {results.search_results.total_found} results</span>
             </div>
 
-            {/* Summary Card */}
+            {/* Query Info */}
+            <Card className="bg-blue-50/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Query Processing</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-1 text-xs">
+                  <p><span className="font-medium">Original:</span> {results.query.original}</p>
+                  <p><span className="font-medium">Expanded terms:</span> {results.query.expanded_terms.join(', ')}</p>
+                  <p><span className="font-medium">Final query:</span> {results.query.final_search_query}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* RAG Answer */}
             <Card className="bg-secondary/20">
               <CardHeader>
-                <CardTitle className="text-lg">Summary</CardTitle>
-                <CardDescription>AI-generated summary based on search results</CardDescription>
+                <CardTitle className="text-lg">AI Answer</CardTitle>
+                <CardDescription>
+                  AI-generated answer based on search results 
+                  <Badge variant="outline" className="ml-2">
+                    {results.rag_answer.confidence} confidence
+                  </Badge>
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-relaxed">{results.summary}</p>
+                <div 
+                  className="prose prose-sm max-w-none formatted-text"
+                  dangerouslySetInnerHTML={{ __html: formatTextWithLists(results.rag_answer.answer) }}
+                />
               </CardContent>
             </Card>
 
@@ -158,34 +294,54 @@ export default function SearchInterface() {
 
             {/* Search Results */}
             <div className="space-y-4">
-              {results.results.map((result) => (
-                <Card key={result.id} className="hover:shadow-md transition-shadow">
+              {results.search_results.documents.map((document) => (
+                <Card key={document.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg text-primary hover:underline cursor-pointer">
-                          <a href={result.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
-                            {result.title}
+                          <a href={document.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                            <span dangerouslySetInnerHTML={renderHighlightedText(document.title)} />
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         </CardTitle>
                         <CardDescription className="text-sm text-green-600 mt-1">
-                          {result.url}
+                          {document.url}
                         </CardDescription>
                       </div>
-                      <Badge variant="secondary" className="ml-2">
-                        {formatScore(result.score)}% match
-                      </Badge>
+                      <div className="flex flex-col gap-1 ml-2">
+                        <Badge variant="secondary">
+                          {document.score.toFixed(2)} Score
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Rank #{document.rank}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-                      {result.snippet}
-                    </p>
-                    {result.timestamp && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div 
+                      className="text-sm text-muted-foreground leading-relaxed mb-2 search-highlights formatted-text"
+                      dangerouslySetInnerHTML={{ __html: formatTextWithLists(document.snippet) }}
+                    />
+                    <div className="text-xs text-muted-foreground space-y-1 search-highlights">
+                      {document.highlights.title && (
+                        <div>
+                          <span className="font-medium">Title highlights: </span>
+                          <span dangerouslySetInnerHTML={renderHighlightedText(document.highlights.title)} />
+                        </div>
+                      )}
+                      {document.highlights.main_text && (
+                        <div>
+                          <span className="font-medium">Text highlights: </span>
+                          <span dangerouslySetInnerHTML={renderHighlightedText(document.highlights.main_text)} />
+                        </div>
+                      )}
+                    </div>
+                    {document.timestamp && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
                         <Clock className="h-3 w-3" />
-                        <span>{result.timestamp}</span>
+                        <span>{document.timestamp}</span>
                       </div>
                     )}
                   </CardContent>
@@ -221,7 +377,7 @@ export default function SearchInterface() {
         <div className="container mx-auto px-4 py-6">
           <div className="text-center text-sm text-muted-foreground">
             <p>TrioRelevan - Information Retrieval System</p>
-            <p className="mt-1">Built with Next.js, TypeScript, and shadcn/ui</p>
+            <p className="mt-1">Built by Dwiky, Hilmy, and Catur</p>
           </div>
         </div>
       </footer>

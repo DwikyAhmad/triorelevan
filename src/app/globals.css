@@ -88,3 +88,43 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add to your existing styles */
+.search-highlights em {
+  background-color: #fef08a; /* yellow-200 */
+  font-style: normal;
+  font-weight: 600;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.formatted-text {
+  line-height: 1.6;
+}
+
+.formatted-text ol {
+  @apply list-decimal list-inside space-y-2 my-4 pl-4;
+  counter-reset: list-counter;
+}
+
+.formatted-text ol li {
+  @apply text-sm leading-relaxed pl-2;
+  display: list-item;
+  list-style-type: decimal;
+}
+
+.formatted-text ul {
+  @apply list-disc list-inside space-y-2 my-4 pl-4;
+}
+
+.formatted-text ul li {
+  @apply text-sm leading-relaxed pl-2;
+}
+
+.formatted-text p {
+  @apply mb-4 text-sm leading-relaxed;
+}
+
+.formatted-text p:last-child {
+  @apply mb-0;
+}
