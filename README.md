@@ -1,36 +1,186 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TrioRelevan - Information Retrieval System
+
+A modern, responsive frontend for a search engine built with Next.js, TypeScript, and shadcn/ui components. This application provides a Google-like search interface that displays search results with AI-generated summaries.
+
+## Features
+
+- 🔍 **Clean Search Interface**: Google-inspired search bar with real-time input
+- 📊 **Search Results Display**: Shows top-k documents with relevance scores
+- 🤖 **AI-Generated Summaries**: Displays contextual summaries based on search results
+- ⚡ **Loading States**: Skeleton loaders for better user experience
+- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
+- 🎨 **Modern UI**: Built with shadcn/ui components and Tailwind CSS
+- 🌙 **Dark Mode Support**: Automatic dark/light theme switching
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Fonts**: Plus Jakarta Sans
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd triorelevan
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── api/
+│   │   └── search/
+│   │       └── route.ts          # Search API endpoint
+│   ├── globals.css               # Global styles and CSS variables
+│   ├── layout.tsx                # Root layout component
+│   └── page.tsx                  # Home page
+├── components/
+│   ├── ui/                       # shadcn/ui components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── input.tsx
+│   │   ├── badge.tsx
+│   │   ├── skeleton.tsx
+│   │   └── separator.tsx
+│   └── search-interface.tsx      # Main search interface component
+└── lib/
+    └── utils.ts                  # Utility functions
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Integration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The frontend is designed to work with a backend search engine. Currently, it uses mock data for demonstration purposes.
 
-## Deploy on Vercel
+### Search API Endpoint
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**POST** `/api/search`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Request Body:**
+```json
+{
+  "query": "search terms",
+  "k": 10
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "id": "1",
+      "title": "Document Title",
+      "url": "https://example.com/doc1",
+      "snippet": "Document excerpt...",
+      "score": 0.95,
+      "timestamp": "2024-01-15"
+    }
+  ],
+  "summary": "AI-generated summary of search results...",
+  "totalResults": 5,
+  "queryTime": 0.15
+}
+```
+
+### Connecting to Your Backend
+
+To connect to your actual search engine backend:
+
+1. Open `src/app/api/search/route.ts`
+2. Replace the mock data section with your backend API call:
+
+```typescript
+// Replace this section in route.ts
+const response = await fetch('your-backend-url/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query, k })
+});
+
+const data = await response.json();
+return NextResponse.json(data);
+```
+
+## Customization
+
+### Color Scheme
+
+The application uses a professional blue and white color palette. Colors are defined in `src/app/globals.css` using CSS custom properties:
+
+- **Background**: Clean white/dark blue backgrounds
+- **Primary**: Professional blue (#3b82f6) for interactive elements
+- **Secondary**: Light blue tones for subtle backgrounds
+- **Accent**: Various blue shades for highlighting
+- **Foreground**: Dark blue text for excellent readability
+
+### Components
+
+All UI components are built with shadcn/ui and can be customized:
+
+- **Search Bar**: Modify `src/components/search-interface.tsx`
+- **Result Cards**: Customize the result display layout
+- **Loading States**: Adjust skeleton components
+- **Summary Section**: Modify the AI summary presentation
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Deployment
+
+The application can be deployed to any platform that supports Next.js:
+
+- **Vercel** (recommended)
+- **Netlify**
+- **AWS Amplify**
+- **Docker**
+
+For Vercel deployment:
+```bash
+npm run build
+vercel --prod
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For questions or support, please open an issue in the repository.
