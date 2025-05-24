@@ -1,186 +1,236 @@
 # TrioRelevan - Information Retrieval System
 
-A modern, responsive frontend for a search engine built with Next.js, TypeScript, and shadcn/ui components. This application provides a Google-like search interface that displays search results with AI-generated summaries.
+TrioRelevan is an advanced medical research assistant that provides intelligent search capabilities with AI-generated answers. Built with Next.js and TypeScript, it offers a modern, responsive interface for searching through medical documents and research papers.
 
-## Features
+## 🚀 Features
 
-- 🔍 **Clean Search Interface**: Google-inspired search bar with real-time input
-- 📊 **Search Results Display**: Shows top-k documents with relevance scores
-- 🤖 **AI-Generated Summaries**: Displays contextual summaries based on search results
-- ⚡ **Loading States**: Skeleton loaders for better user experience
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
-- 🎨 **Modern UI**: Built with shadcn/ui components and Tailwind CSS
-- 🌙 **Dark Mode Support**: Automatic dark/light theme switching
+- **Intelligent Search**: Advanced search functionality with query expansion and processing
+- **AI-Powered Answers**: RAG (Retrieval Augmented Generation) system provides contextual answers
+- **Document Ranking**: Sophisticated scoring and ranking system for search results
+- **Text Highlighting**: Visual emphasis on search terms in results
+- **Responsive Design**: Modern, mobile-friendly interface built with shadcn/ui
+- **Real-time Processing**: Fast search with loading states and error handling
+- **Medical Focus**: Specialized for medical and health-related research
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
+- **Frontend**: Next.js 15, TypeScript, React
+- **UI Framework**: shadcn/ui, Tailwind CSS
 - **Icons**: Lucide React
-- **Fonts**: Plus Jakarta Sans
+- **Backend**: Django
+- **Search Engine**: Elastic Search
+- **Deployment**: Vercel
 
-## Getting Started
+## 📋 Prerequisites
 
-### Prerequisites
+- Node.js 18+ and npm/yarn/pnpm
+- A backend search engine API (running on port 8000 for local development)
 
-- Node.js 18+ 
-- npm or yarn
+## 🚀 Getting Started
 
-### Installation
+### 1. Clone the repository
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/triorelevan.git
 cd triorelevan
 ```
 
-2. Install dependencies:
+### 2. Install dependencies
+
 ```bash
 npm install
+# or
+yarn install
+# or
+pnpm install
 ```
 
-3. Run the development server:
+### 3. Set up environment variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Search API Configuration
+SEARCH_API_BASE_URL=http://127.0.0.1:8000
+
+# For production, set this to your deployed backend URL:
+# SEARCH_API_BASE_URL=https://your-backend-api.vercel.app
+```
+
+### 4. Run the development server
+
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Project Structure
+## 🔧 Configuration
 
-```
-src/
-├── app/
-│   ├── api/
-│   │   └── search/
-│   │       └── route.ts          # Search API endpoint
-│   ├── globals.css               # Global styles and CSS variables
-│   ├── layout.tsx                # Root layout component
-│   └── page.tsx                  # Home page
-├── components/
-│   ├── ui/                       # shadcn/ui components
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── input.tsx
-│   │   ├── badge.tsx
-│   │   ├── skeleton.tsx
-│   │   └── separator.tsx
-│   └── search-interface.tsx      # Main search interface component
-└── lib/
-    └── utils.ts                  # Utility functions
-```
+### Environment Variables
 
-## API Integration
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `SEARCH_API_BASE_URL` | Backend search API URL | `http://127.0.0.1:8000` | No |
 
-The frontend is designed to work with a backend search engine. Currently, it uses mock data for demonstration purposes.
+### Backend API Requirements
 
-### Search API Endpoint
+Your backend API should provide a `/search` endpoint that accepts:
 
-**POST** `/api/search`
+- `q` (string): Search query
+- `k` (number): Number of results to return
 
-**Request Body:**
+And returns a response in this format:
+
 ```json
 {
-  "query": "search terms",
-  "k": 10
+  "query": {
+    "original": "diabetes",
+    "expanded_terms": ["diabetes", "diabetic", "blood sugar"],
+    "final_search_query": "diabetes diabetic blood sugar"
+  },
+  "search_results": {
+    "total_found": 150,
+    "returned_count": 10,
+    "k_requested": 10,
+    "documents": [
+      {
+        "rank": 1,
+        "id": "doc_123",
+        "score": 0.95,
+        "title": "Understanding Type 2 Diabetes",
+        "url": "https://example.com/article",
+        "snippet": "Diabetes is a condition...",
+        "highlights": {
+          "title": "Understanding Type 2 <em>Diabetes</em>",
+          "main_text": "<em>Diabetes</em> is a condition..."
+        }
+      }
+    ]
+  },
+  "rag_answer": {
+    "answer": "Diabetes is primarily caused by...",
+    "confidence": "high"
+  }
 }
 ```
 
-**Response:**
-```json
-{
-  "results": [
-    {
-      "id": "1",
-      "title": "Document Title",
-      "url": "https://example.com/doc1",
-      "snippet": "Document excerpt...",
-      "score": 0.95,
-      "timestamp": "2024-01-15"
-    }
-  ],
-  "summary": "AI-generated summary of search results...",
-  "totalResults": 5,
-  "queryTime": 0.15
-}
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Set environment variables in Vercel dashboard:
+   - Go to Project Settings → Environment Variables
+   - Add `SEARCH_API_BASE_URL` with your production backend URL
+4. Deploy
+
+### Deploy Backend
+
+Make sure your backend search API is deployed and accessible. Update the `SEARCH_API_BASE_URL` environment variable accordingly.
+
+## 🎯 Usage
+
+1. **Search**: Enter medical terms or questions in the search box
+2. **View Results**: Browse through ranked documents with relevance scores
+3. **AI Answers**: Read AI-generated answers based on search results
+4. **Query Processing**: See how your query was expanded and processed
+5. **Explore Documents**: Click on document titles to view full articles
+
+## 📁 Project Structure
+
+```
+triorelevan/
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── search/
+│   │   │       └── route.ts          # Search API endpoint
+│   │   ├── globals.css               # Global styles
+│   │   ├── layout.tsx               # Root layout
+│   │   └── page.tsx                 # Home page
+│   ├── components/
+│   │   ├── ui/                      # shadcn/ui components
+│   │   └── search-interface.tsx     # Main search component
+│   └── lib/
+│       └── utils.ts                 # Utility functions
+├── public/                          # Static assets
+├── .env.local                       # Environment variables
+├── next.config.js                   # Next.js configuration
+├── tailwind.config.js              # Tailwind CSS configuration
+├── tsconfig.json                    # TypeScript configuration
+└── package.json                     # Dependencies and scripts
 ```
 
-### Connecting to Your Backend
+## 🎨 Features in Detail
 
-To connect to your actual search engine backend:
+### Search Interface
+- Clean, Google-like search experience
+- Real-time search suggestions
+- Loading states and error handling
+- Responsive design for all devices
 
-1. Open `src/app/api/search/route.ts`
-2. Replace the mock data section with your backend API call:
+### AI Answers
+- Context-aware responses using RAG
+- Confidence scoring
+- Formatted text with bullet points
+- Source attribution
 
-```typescript
-// Replace this section in route.ts
-const response = await fetch('your-backend-url/search', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ query, k })
-});
+### Document Results
+- Relevance scoring and ranking
+- Text highlighting for search terms
+- Document metadata display
+- External link handling
 
-const data = await response.json();
-return NextResponse.json(data);
-```
+### Query Processing
+- Query expansion and optimization
+- Search term analysis
+- Processing transparency
 
-## Customization
+## 🐛 Troubleshooting
 
-### Color Scheme
+### Common Issues
 
-The application uses a professional blue and white color palette. Colors are defined in `src/app/globals.css` using CSS custom properties:
+1. **Backend Connection Failed**
+   - Ensure your backend API is running
+   - Check the `SEARCH_API_BASE_URL` environment variable
+   - Verify the backend endpoint returns the expected format
 
-- **Background**: Clean white/dark blue backgrounds
-- **Primary**: Professional blue (#3b82f6) for interactive elements
-- **Secondary**: Light blue tones for subtle backgrounds
-- **Accent**: Various blue shades for highlighting
-- **Foreground**: Dark blue text for excellent readability
+2. **Environment Variables Not Working**
+   - Make sure `.env.local` is in the root directory
+   - Restart the development server after changing environment variables
+   - For Vercel deployment, redeploy after adding environment variables
 
-### Components
+3. **Search Not Working**
+   - Check browser console for errors
+   - Verify backend API is accessible
+   - Ensure proper CORS configuration on backend
 
-All UI components are built with shadcn/ui and can be customized:
+## 👥 Team
 
-- **Search Bar**: Modify `src/components/search-interface.tsx`
-- **Result Cards**: Customize the result display layout
-- **Loading States**: Adjust skeleton components
-- **Summary Section**: Modify the AI summary presentation
+Built by **Dwiky**, **Hilmy**, and **Catur** as part of an Information Retrieval System project.
 
-## Available Scripts
+## 📄 License
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Deployment
-
-The application can be deployed to any platform that supports Next.js:
-
-- **Vercel** (recommended)
-- **Netlify**
-- **AWS Amplify**
-- **Docker**
-
-For Vercel deployment:
-```bash
-npm run build
-vercel --prod
-```
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📞 Support
 
-This project is licensed under the MIT License.
+If you encounter any issues or have questions, please open an issue on GitHub or contact the development team.
 
-## Support
+---
 
-For questions or support, please open an issue in the repository.
+**TrioRelevan** - Your Medical Research Assistant 🔬
